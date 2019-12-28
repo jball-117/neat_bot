@@ -6,11 +6,26 @@ from google.protobuf.json_format import MessageToDict
 from tqdm import tqdm
 import os
 
+pd.set_option('mode.chained_assignment', None)
+
+OBx = []
+OBy = []
+OBz = []
+
+class OutofBounds(Exception):
+    """Raised when the segment is OB"""
+    pass
+
 def x_segment(x):
     seg = -4096
     while(True):
         if x >= seg and x < seg+1024:
             return (seg+(seg+1024))/2
+        elif seg > 4096:
+            print("x:", x)
+            print("seg is too large")
+            OBx.append(x)
+            raise OutofBounds
         seg += 1024
         
 def y_segment(y):
@@ -22,6 +37,11 @@ def y_segment(y):
     while(True):
         if y >= seg and y < seg+1024:
             return (seg+(seg+1024))/2
+        elif seg > 5120:
+            print("y:", y)
+            print("seg is too large")
+            OBy.append(y)
+            raise OutofBounds
         seg += 1024
         
 def z_segment(z):
@@ -29,16 +49,29 @@ def z_segment(z):
     while(True):
         if z >= seg and z < seg+292:
             return (seg+(seg+292))/2
+        elif seg > 2044:
+            print("z:", z)
+            print("seg is too large")
+            OBz.append(z)
+            raise OutofBounds
         seg += 292
 
 ## converting replays ##
-rootdir = '/home/zach/Files/Nas/Replays'
+#rootdir = '/home/zach/Files/Nas/Replays'
+rootdir = '/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600'
 for root, dirs, files in os.walk(rootdir):
-    for filename in files:
+    for filename in tqdm(files):
         if not filename.endswith('.replay'):
             continue
+        tester = os.path.abspath(os.path.join(root, filename)).replace('.replay', '.csv')
+        if os.path.exists(tester):
+            continue
         print("ANALYZING...")
-        analysis_manager = carball.analyze_replay_file(os.path.abspath(os.path.join(root, filename)))
+        try:
+            analysis_manager = carball.analyze_replay_file(os.path.abspath(os.path.join(root, filename)))
+        except Exception as e:
+            print("ERROR WITH REPLAY ANALYSIS\n", e)
+            continue
         proto_game = analysis_manager.get_protobuf_data()
         df = analysis_manager.get_data_frame()
         dict_game = MessageToDict(proto_game)
@@ -87,16 +120,22 @@ for root, dirs, files in os.walk(rootdir):
         player_desired = 0
 
         single_level_df = df[ordered_playas[player_desired]]
-        single_level_df.drop(columns=['rot_x','rot_y','rot_z','vel_x','vel_y','vel_z','ang_vel_x','ang_vel_y',\
+        rem_cols = ['rot_x','rot_y','rot_z','vel_x','vel_y','vel_z','ang_vel_x','ang_vel_y',\
                 'ang_vel_z','ping','throttle','steer','handbrake','ball_cam','boost','boost_active','jump_active',\
-                'double_jump_active','dodge_active','boost_collect'], inplace=True)
+                'double_jump_active','dodge_active','boost_collect']  
+        for col in rem_cols:
+            if col in single_level_df.columns:
+                single_level_df.drop(columns=[col], inplace=True)
         single_level_df.rename(columns={'pos_x': str(player_desired)+'_pos_x', 'pos_y': str(player_desired)+'_pos_y', 'pos_z': str(player_desired)+'_pos_z'}, inplace=True)
         for i, playa in enumerate(ordered_playas):
             if player_desired == i:
                 continue
             piece = df[playa]
-            piece.drop(columns=['ping','throttle','steer','handbrake','ball_cam','boost','boost_active','jump_active',\
-                    'double_jump_active','dodge_active','boost_collect'], inplace=True)
+            rem_cols = ['ping','throttle','steer','handbrake','ball_cam','boost','boost_active','jump_active',\
+                    'double_jump_active','dodge_active','boost_collect']
+            for col in rem_cols:
+                if col in piece.columns:
+                    piece.drop(columns=[col], inplace=True)
             piece.rename(columns={'pos_x': str(i)+'_pos_x', 'pos_y': str(i)+'_pos_y', 'pos_z': str(i)+'_pos_z', \
                     'rot_x': str(i)+'_rot_x', 'rot_y': str(i)+'_rot_y', 'rot_z': str(i)+'_rot_z', 'vel_x': str(i)+'_vel_x', \
                     'vel_y': str(i)+'_vel_y', 'vel_z': str(i)+'_vel_z', 'ang_vel_x': str(i)+'_ang_vel_x', 'ang_vel_y': str(i)+'_ang_vel_y', \
@@ -121,13 +160,19 @@ for root, dirs, files in os.walk(rootdir):
         ## THIS GIVES 1024 (X) BY 1024 (Y) BY 292 (Z) CUBES
          
         print("NORMALIZING...")
-        for i in tqdm(single_level_df.index):
-            single_level_df.at[i, '0_pos_x'] = x_segment(single_level_df.at[i, '0_pos_x'])
-            single_level_df.at[i, '0_pos_y'] = y_segment(single_level_df.at[i, '0_pos_y'])
-            single_level_df.at[i, '0_pos_z'] = z_segment(single_level_df.at[i, '0_pos_z'])
+        try: 
+            for i in tqdm(single_level_df.index):
+                single_level_df.at[i, '0_pos_x'] = x_segment(single_level_df.at[i, '0_pos_x'])
+                single_level_df.at[i, '0_pos_y'] = y_segment(single_level_df.at[i, '0_pos_y'])
+                single_level_df.at[i, '0_pos_z'] = z_segment(single_level_df.at[i, '0_pos_z'])
+        except OutofBounds:
+            print("OB")
+            print(OBx)
+            print(OBy)
+            print(OBz)
+            continue
 
         csv_name = os.path.abspath(os.path.join(root, filename))
         csv_name = csv_name.replace('.replay', '.csv')
         print("WRITING", csv_name)
         single_level_df.to_csv(csv_name)
-        exit()
