@@ -17,15 +17,14 @@ class OutofBounds(Exception):
     pass
 
 def x_segment(x):
+    if x > 4096 or x < -4096:
+        print("x:", x)
+        OBx.append(x)
+        raise OutofBounds
     seg = -4096
     while(True):
         if x >= seg and x < seg+1024:
             return (seg+(seg+1024))/2
-        elif seg > 4096:
-            print("x:", x)
-            print("seg is too large")
-            OBx.append(x)
-            raise OutofBounds
         seg += 1024
         
 def y_segment(y):
@@ -37,34 +36,30 @@ def y_segment(y):
     while(True):
         if y >= seg and y < seg+1024:
             return (seg+(seg+1024))/2
-        elif seg > 5120:
-            print("y:", y)
-            print("seg is too large")
-            OBy.append(y)
-            raise OutofBounds
         seg += 1024
         
 def z_segment(z):
+    if z > 2044 or z < 0:
+        print("z:", z)
+        OBz.append(z)
+        raise OutofBounds
     seg = 0
     while(True):
         if z >= seg and z < seg+292:
             return (seg+(seg+292))/2
-        elif seg > 2044:
-            print("z:", z)
-            print("seg is too large")
-            OBz.append(z)
-            raise OutofBounds
         seg += 292
 
 ## converting replays ##
 #rootdir = '/home/zach/Files/Nas/Replays'
 rootdir = '/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600'
 for root, dirs, files in os.walk(rootdir):
-    for filename in tqdm(files):
+    for filename in files:
         if not filename.endswith('.replay'):
+            print("\n", filename, "not a replay\n")
             continue
         tester = os.path.abspath(os.path.join(root, filename)).replace('.replay', '.csv')
         if os.path.exists(tester):
+            print("\n", tester, "exists\n")
             continue
         print("ANALYZING...")
         try:
