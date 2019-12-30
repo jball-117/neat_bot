@@ -4,11 +4,6 @@ import numpy as np
 from tqdm import tqdm
 import os
 
-from keras.models import Model
-from keras import layers
-from keras import optimizers
-from keras.layers import * 
-
 ## NN shouldn't care about game time in OT
 def fix_ot_secs(df):
     if len(df[df['seconds_remaining'] == -1.0]) > 0:
@@ -27,7 +22,7 @@ def fix_ot_secs(df):
 
 ## combining replays ##
 #rootdir = '/home/zach/Files/Nas/Replays'
-rootdir = '/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs'
+rootdir = '/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs/'
 for root, dirs, files in os.walk(rootdir):
     all_dfs = pd.read_csv(rootdir+"/"+files[0])
     all_dfs.drop(columns=['Unnamed: 0'], inplace=True)
@@ -49,4 +44,6 @@ for root, dirs, files in os.walk(rootdir):
         piece = piece[:-1]
         all_dfs = all_dfs.append(piece, ignore_index=True)
 
-print(len(all_dfs))
+    print(len(all_dfs))
+    print("WRITING...")
+    all_dfs.to_csv("train.csv")
