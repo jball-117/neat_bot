@@ -75,6 +75,7 @@ for root, dirs, files in os.walk(rootdir):
         player_desired = 0
         single_level_df = df[ordered_playas[player_desired]]
         #################################################################################################################
+        '''
         rem_cols = ['rot_x','rot_y','rot_z','vel_x','vel_y','vel_z','ang_vel_x','ang_vel_y',\
                 'ang_vel_z','ping','throttle','steer','handbrake','ball_cam','boost','boost_active','jump_active',\
                 'double_jump_active','dodge_active','boost_collect']  
@@ -82,12 +83,23 @@ for root, dirs, files in os.walk(rootdir):
             if col in single_level_df.columns:
                 single_level_df.drop(columns=[col], inplace=True)
         single_level_df.rename(columns={'pos_x': str(player_desired)+'_pos_x', 'pos_y': str(player_desired)+'_pos_y', 'pos_z': str(player_desired)+'_pos_z'}, inplace=True)
+        '''
+        single_level_df.drop(columns=['ping'], inplace=True)
+        single_level_df.rename(columns={'pos_x': str(player_desired)+'_pos_x', 'pos_y': str(player_desired)+'_pos_y', 'pos_z': str(player_desired)+'_pos_z', 
+                'rot_x': str(player_desired)+'_rot_x', 'rot_y': str(player_desired)+'_rot_y', 'rot_z': str(player_desired)+'_rot_z', 
+                'vel_x': str(player_desired)+'_vel_x', 'vel_y': str(player_desired)+'_vel_y', 'vel_z': str(player_desired)+'_vel_z', 
+                'ang_vel_x': str(player_desired)+'_ang_vel_x', 'ang_vel_y': str(player_desired)+'_ang_vel_y', 'ang_vel_z': str(player_desired)+'_ang_vel_z',
+                'throttle': str(player_desired)+'_throttle', 'steer': str(player_desired)+'_steer', 'handbrake': str(player_desired)+'_handbrake',
+                'ball_cam': str(player_desired)+'_ball_cam', 'boost': str(player_desired)+'_boost', 'boost_active': str(player_desired)+'_boost_active', 
+                'jump_active': str(player_desired)+'_jump_active', 'double_jump_active': str(player_desired)+'_double_jump_active', 'dodge_active': str(player_desired)+'_dodge_active', 
+                'boost_collect': str(player_desired)+'_boost_collect'}, inplace=True)
         #################################################################################################################
         for i, playa in enumerate(ordered_playas):
             if player_desired == i:
                 continue
             piece = df[playa]
             #################################################################################################################
+            '''
             rem_cols = ['ping','throttle','steer','handbrake','ball_cam','boost','boost_active','jump_active',\
                     'double_jump_active','dodge_active','boost_collect']
             for col in rem_cols:
@@ -97,6 +109,16 @@ for root, dirs, files in os.walk(rootdir):
                     'rot_x': str(i)+'_rot_x', 'rot_y': str(i)+'_rot_y', 'rot_z': str(i)+'_rot_z', 'vel_x': str(i)+'_vel_x', \
                     'vel_y': str(i)+'_vel_y', 'vel_z': str(i)+'_vel_z', 'ang_vel_x': str(i)+'_ang_vel_x', 'ang_vel_y': str(i)+'_ang_vel_y', \
                     'ang_vel_z': str(i)+'_ang_vel_z'}, inplace=True)
+            '''
+            piece.drop(columns=['ping'], inplace=True)
+            piece.rename(columns={'pos_x': str(i)+'_pos_x', 'pos_y': str(i)+'_pos_y', 'pos_z': str(i)+'_pos_z', 
+                    'rot_x': str(i)+'_rot_x', 'rot_y': str(i)+'_rot_y', 'rot_z': str(i)+'_rot_z', 
+                    'vel_x': str(i)+'_vel_x', 'vel_y': str(i)+'_vel_y', 'vel_z': str(i)+'_vel_z', 
+                    'ang_vel_x': str(i)+'_ang_vel_x', 'ang_vel_y': str(i)+'_ang_vel_y', 'ang_vel_z': str(i)+'_ang_vel_z',
+                    'throttle': str(i)+'_throttle', 'steer': str(i)+'_steer', 'handbrake': str(i)+'_handbrake',
+                    'ball_cam': str(i)+'_ball_cam', 'boost': str(i)+'_boost', 'boost_active': str(i)+'_boost_active', 
+                    'jump_active': str(i)+'_jump_active', 'double_jump_active': str(i)+'_double_jump_active', 'dodge_active': str(i)+'_dodge_active', 
+                    'boost_collect': str(i)+'_boost_collect'}, inplace=True)
             #################################################################################################################
             single_level_df = single_level_df.join(piece)
             
@@ -108,11 +130,13 @@ for root, dirs, files in os.walk(rootdir):
         single_level_df = single_level_df.join(ball_data)
         single_level_df['seconds_remaining'] = df['game']['seconds_remaining']
 
-        ## CHECK HOW MANY NAN EXIST ## 
+        '''
         num_nans = len(single_level_df) - len(single_level_df.dropna())
         single_level_df.dropna(inplace=True)
         single_level_df.reset_index(drop=True, inplace=True)
-
+        '''
+        print(single_level_df)
+        exit()
         print("WRITING", csv_name)
         single_level_df.to_csv(csv_name)
     break
