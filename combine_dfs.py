@@ -1,6 +1,5 @@
 ## COMBINES DATAFRAMES OF PARSED REPLAY FILES ##
 import pandas as pd
-import numpy as np
 from tqdm import tqdm
 import os
 
@@ -46,4 +45,4 @@ for root, dirs, files in os.walk(rootdir):
 
     print(len(all_dfs))
     print("WRITING...")
-    all_dfs.to_csv("train.csv")
+    all_dfs.to_csv("exact_train.csv")
