@@ -1,12 +1,15 @@
 ## TAKES IN REPLAY FILES FROM AND GIVES DF ##
 import carball
 import pandas as pd
-import numpy as np
+from numpy import isnan
 from google.protobuf.json_format import MessageToDict
 from tqdm import tqdm
 import os
 
+DELETE_WHEN_LEFT = 1
+
 pd.set_option('mode.chained_assignment', None)
+pd.set_option('display.max_columns', None)
 
 ## converting replays ##
 #rootdir = '/home/zach/Files/Nas/Replays'
@@ -29,6 +32,7 @@ for root, dirs, files in os.walk(rootdir):
             continue
         proto_game = analysis_manager.get_protobuf_data()
         df = analysis_manager.get_data_frame()
+        df = df.astype('float64')
         dict_game = MessageToDict(proto_game)
 
         player_team = {}
@@ -130,12 +134,76 @@ for root, dirs, files in os.walk(rootdir):
         single_level_df = single_level_df.join(ball_data)
         single_level_df['seconds_remaining'] = df['game']['seconds_remaining']
         
-        # CANT DO THIS ANYMORE
-        '''
-        single_level_df.dropna(inplace=True)
-        single_level_df.reset_index(drop=True, inplace=True)
-        '''
-        
-        print("WRITING", csv_name)
-        single_level_df.to_csv(csv_name)
+        # need to do this if someone leaves game
+        # THIS IS STILL BROKEN. THIS ONLY CHECKS ONE ROW FOR ALL NAN
+        # MAKE SURE EVERYTHING ELSE FOR THAT PLAYER AFTER THAT ROW IS NAN
+        if DELETE_WHEN_LEFT:
+            print("CHECKING IF PLAYERS LEFT...")
+            for i in single_level_df.index:
+                if (isnan(single_level_df.at[i, '0_pos_x']) and isnan(single_level_df.at[i, '0_pos_y']) and isnan(single_level_df.at[i, '0_pos_z']) \
+                    and isnan(single_level_df.at[i, '0_rot_x']) and isnan(single_level_df.at[i, '0_rot_y']) and isnan(single_level_df.at[i, '0_rot_z']) \
+                    and isnan(single_level_df.at[i, '0_vel_x']) and isnan(single_level_df.at[i, '0_vel_y']) and isnan(single_level_df.at[i, '0_vel_z']) \
+                    and isnan(single_level_df.at[i, '0_ang_vel_x']) and isnan(single_level_df.at[i, '0_ang_vel_y']) and isnan(single_level_df.at[i, '0_ang_vel_z']) \
+                    and isnan(single_level_df.at[i, '0_throttle']) and isnan(single_level_df.at[i, '0_steer']) and isnan(single_level_df.at[i, '0_handbrake']) \
+                    and isnan(single_level_df.at[i, '0_ball_cam']) and isnan(single_level_df.at[i, '0_boost']) and isnan(single_level_df.at[i, '0_boost_active']) \
+                    and isnan(single_level_df.at[i, '0_jump_active']) and isnan(single_level_df.at[i, '0_double_jump_active']) and isnan(single_level_df.at[i, '0_dodge_active']) \
+                    and isnan(single_level_df.at[i, '0_boost_collect'])):
+                    print("player 0 left at frame", i)
+                    break
+                if (isnan(single_level_df.at[i, '1_pos_x']) and isnan(single_level_df.at[i, '1_pos_y']) and isnan(single_level_df.at[i, '1_pos_z']) \
+                    and isnan(single_level_df.at[i, '1_rot_x']) and isnan(single_level_df.at[i, '1_rot_y']) and isnan(single_level_df.at[i, '1_rot_z']) \
+                    and isnan(single_level_df.at[i, '1_vel_x']) and isnan(single_level_df.at[i, '1_vel_y']) and isnan(single_level_df.at[i, '1_vel_z']) \
+                    and isnan(single_level_df.at[i, '1_ang_vel_x']) and isnan(single_level_df.at[i, '1_ang_vel_y']) and isnan(single_level_df.at[i, '1_ang_vel_z']) \
+                    and isnan(single_level_df.at[i, '1_throttle']) and isnan(single_level_df.at[i, '1_steer']) and isnan(single_level_df.at[i, '1_handbrake']) \
+                    and isnan(single_level_df.at[i, '1_ball_cam']) and isnan(single_level_df.at[i, '1_boost']) and isnan(single_level_df.at[i, '1_boost_active']) \
+                    and isnan(single_level_df.at[i, '1_jump_active']) and isnan(single_level_df.at[i, '1_double_jump_active']) and isnan(single_level_df.at[i, '1_dodge_active']) \
+                    and isnan(single_level_df.at[i, '1_boost_collect'])):
+                    print("player 1 left at frame", i)
+                    break
+                if (isnan(single_level_df.at[i, '2_pos_x']) and isnan(single_level_df.at[i, '2_pos_y']) and isnan(single_level_df.at[i, '2_pos_z']) \
+                    and isnan(single_level_df.at[i, '2_rot_x']) and isnan(single_level_df.at[i, '2_rot_y']) and isnan(single_level_df.at[i, '2_rot_z']) \
+                    and isnan(single_level_df.at[i, '2_vel_x']) and isnan(single_level_df.at[i, '2_vel_y']) and isnan(single_level_df.at[i, '2_vel_z']) \
+                    and isnan(single_level_df.at[i, '2_ang_vel_x']) and isnan(single_level_df.at[i, '2_ang_vel_y']) and isnan(single_level_df.at[i, '2_ang_vel_z']) \
+                    and isnan(single_level_df.at[i, '2_throttle']) and isnan(single_level_df.at[i, '2_steer']) and isnan(single_level_df.at[i, '2_handbrake']) \
+                    and isnan(single_level_df.at[i, '2_ball_cam']) and isnan(single_level_df.at[i, '2_boost']) and isnan(single_level_df.at[i, '2_boost_active']) \
+                    and isnan(single_level_df.at[i, '2_jump_active']) and isnan(single_level_df.at[i, '2_double_jump_active']) and isnan(single_level_df.at[i, '2_dodge_active']) \
+                    and isnan(single_level_df.at[i, '2_boost_collect'])):
+                    print("player 2 left at frame", i)
+                    break
+                if (isnan(single_level_df.at[i, '3_pos_x']) and isnan(single_level_df.at[i, '3_pos_y']) and isnan(single_level_df.at[i, '3_pos_z']) \
+                    and isnan(single_level_df.at[i, '3_rot_x']) and isnan(single_level_df.at[i, '3_rot_y']) and isnan(single_level_df.at[i, '3_rot_z']) \
+                    and isnan(single_level_df.at[i, '3_vel_x']) and isnan(single_level_df.at[i, '3_vel_y']) and isnan(single_level_df.at[i, '3_vel_z']) \
+                    and isnan(single_level_df.at[i, '3_ang_vel_x']) and isnan(single_level_df.at[i, '3_ang_vel_y']) and isnan(single_level_df.at[i, '3_ang_vel_z']) \
+                    and isnan(single_level_df.at[i, '3_throttle']) and isnan(single_level_df.at[i, '3_steer']) and isnan(single_level_df.at[i, '3_handbrake']) \
+                    and isnan(single_level_df.at[i, '3_ball_cam']) and isnan(single_level_df.at[i, '3_boost']) and isnan(single_level_df.at[i, '3_boost_active']) \
+                    and isnan(single_level_df.at[i, '3_jump_active']) and isnan(single_level_df.at[i, '3_double_jump_active']) and isnan(single_level_df.at[i, '3_dodge_active']) \
+                    and isnan(single_level_df.at[i, '3_boost_collect'])):
+                    print("player 3 left at frame", i)
+                    break
+                if (isnan(single_level_df.at[i, '4_pos_x']) and isnan(single_level_df.at[i, '4_pos_y']) and isnan(single_level_df.at[i, '4_pos_z']) \
+                    and isnan(single_level_df.at[i, '4_rot_x']) and isnan(single_level_df.at[i, '4_rot_y']) and isnan(single_level_df.at[i, '4_rot_z']) \
+                    and isnan(single_level_df.at[i, '4_vel_x']) and isnan(single_level_df.at[i, '4_vel_y']) and isnan(single_level_df.at[i, '4_vel_z']) \
+                    and isnan(single_level_df.at[i, '4_ang_vel_x']) and isnan(single_level_df.at[i, '4_ang_vel_y']) and isnan(single_level_df.at[i, '4_ang_vel_z']) \
+                    and isnan(single_level_df.at[i, '4_throttle']) and isnan(single_level_df.at[i, '4_steer']) and isnan(single_level_df.at[i, '4_handbrake']) \
+                    and isnan(single_level_df.at[i, '4_ball_cam']) and isnan(single_level_df.at[i, '4_boost']) and isnan(single_level_df.at[i, '4_boost_active']) \
+                    and isnan(single_level_df.at[i, '4_jump_active']) and isnan(single_level_df.at[i, '4_double_jump_active']) and isnan(single_level_df.at[i, '4_dodge_active']) \
+                    and isnan(single_level_df.at[i, '4_boost_collect'])):
+                    print("player 4 left at frame", i)
+                    break
+                if (isnan(single_level_df.at[i, '5_pos_x']) and isnan(single_level_df.at[i, '5_pos_y']) and isnan(single_level_df.at[i, '5_pos_z']) \
+                    and isnan(single_level_df.at[i, '5_rot_x']) and isnan(single_level_df.at[i, '5_rot_y']) and isnan(single_level_df.at[i, '5_rot_z']) \
+                    and isnan(single_level_df.at[i, '5_vel_x']) and isnan(single_level_df.at[i, '5_vel_y']) and isnan(single_level_df.at[i, '5_vel_z']) \
+                    and isnan(single_level_df.at[i, '5_ang_vel_x']) and isnan(single_level_df.at[i, '5_ang_vel_y']) and isnan(single_level_df.at[i, '5_ang_vel_z']) \
+                    and isnan(single_level_df.at[i, '5_throttle']) and isnan(single_level_df.at[i, '5_steer']) and isnan(single_level_df.at[i, '5_handbrake']) \
+                    and isnan(single_level_df.at[i, '5_ball_cam']) and isnan(single_level_df.at[i, '5_boost']) and isnan(single_level_df.at[i, '5_boost_active']) \
+                    and isnan(single_level_df.at[i, '5_jump_active']) and isnan(single_level_df.at[i, '5_double_jump_active']) and isnan(single_level_df.at[i, '5_dodge_active']) \
+                    and isnan(single_level_df.at[i, '5_boost_collect'])):
+                    print("player 5 left at frame", i)
+                    break
+            #single_level_df = single_level_df[:i]
+            print(single_level_df[i-10:i+10])
+            exit()
+
+        #print("WRITING", csv_name)
+        #single_level_df.to_csv(csv_name)
     break
