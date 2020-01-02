@@ -129,14 +129,13 @@ for root, dirs, files in os.walk(rootdir):
                 'ang_vel_x': 'ball_ang_vel_x', 'ang_vel_y': 'ball_ang_vel_y', 'ang_vel_z': 'ball_ang_vel_z'}, inplace=True)
         single_level_df = single_level_df.join(ball_data)
         single_level_df['seconds_remaining'] = df['game']['seconds_remaining']
-
+        
+        # CANT DO THIS ANYMORE
         '''
-        num_nans = len(single_level_df) - len(single_level_df.dropna())
         single_level_df.dropna(inplace=True)
         single_level_df.reset_index(drop=True, inplace=True)
         '''
-        print(single_level_df)
-        exit()
+        
         print("WRITING", csv_name)
         single_level_df.to_csv(csv_name)
     break

@@ -3,6 +3,7 @@
 ## AND 7 Z SEGMENTS. WITH GRANULARITY OF .5 THERE WILL BE 16 X SEGMENTS, 20 Y
 ## SEGMENTS, AND 14 Z SEGMENTS ETC.
 import pandas as pd
+from numpy import isnan
 from tqdm import tqdm
 import os
 
@@ -17,6 +18,8 @@ class OutofBounds(Exception):
     pass
 
 def x_segment(x):
+    if isnan(x):
+        return x
     if x > 4096 or x < -4096:
         print("x:", x)
         OBx.append(x)
@@ -28,6 +31,8 @@ def x_segment(x):
         seg += (1024*GRANULARITY)
         
 def y_segment(y):
+    if isnan(y):
+        return y
     seg = -5120
     if y < -5120:
         return -5121 # IN BLUE TEAM GOAL
@@ -39,6 +44,8 @@ def y_segment(y):
         seg += (1024*GRANULARITY)
         
 def z_segment(z):
+    if isnan(z):
+        return z
     if z > 2044 or z < 0:
         print("z:", z)
         OBz.append(z)
@@ -71,13 +78,18 @@ for root, dirs, files in os.walk(rootdir):
             print("\n", csv_name, "exists\n")
             continue
         
-        df = pd.read_csv(os.path.join(root, filename))
+        df = pd.read_csv(os.path.join(root, filename), low_memory=False)
         df.drop(columns=['Unnamed: 0'], inplace=True)
         try: 
-            for i in df.index:
-                df.at[i, '0_pos_x'] = x_segment(df.at[i, '0_pos_x'])
-                df.at[i, '0_pos_y'] = y_segment(df.at[i, '0_pos_y'])
-                df.at[i, '0_pos_z'] = z_segment(df.at[i, '0_pos_z'])
+            for i in df.index: # g1 -> granularity is 1
+                if GRANULARITY == 1:
+                    df.at[i, '0_pos_x_g1'] = x_segment(df.at[i, '0_pos_x'])
+                    df.at[i, '0_pos_y_g1'] = y_segment(df.at[i, '0_pos_y'])
+                    df.at[i, '0_pos_z_g1'] = z_segment(df.at[i, '0_pos_z'])
+                elif GRANULARITY == .5:
+                    df.at[i, '0_pos_x_g1/2'] = x_segment(df.at[i, '0_pos_x'])
+                    df.at[i, '0_pos_y_g1/2'] = y_segment(df.at[i, '0_pos_y'])
+                    df.at[i, '0_pos_z_g1/2'] = z_segment(df.at[i, '0_pos_z'])
         except OutofBounds:
             print("OB")
             print(OBx)
