@@ -7,7 +7,7 @@ from numpy import isnan
 from tqdm import tqdm
 import os
 
-GRANULARITY = 1 # edit this
+GRANULARITY = .5 # edit this
 
 OBx = []
 OBy = []

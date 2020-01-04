@@ -4,7 +4,15 @@ from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import GridSearchCV
 from keras.layers import *
 
-df = pd.read_csv('train_8x_10y_7z.csv')
+GRANULARITY = 0
+
+if GRANULARITY == 0:
+    df = pd.read_csv('exact_train.csv')
+if GRANULARITY == .5:
+    df = pd.read_csv('train_16x_20y_14z.csv')
+if GRANULARITY == 1:
+    df = pd.read_csv('train_8x_10y_7z.csv')
+
 df.drop(columns=['Unnamed: 0'], inplace=True)
 
 # NORMALIZING MAKING RANGE -1 TO 1 FOR ALL COLS
