@@ -14,7 +14,7 @@ pd.set_option('display.max_rows', None)
 
 ## converting replays ##
 #rootdir = '/home/zach/Files/Nas/Replays'
-rootdir = '/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600'
+rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600'
 for root, dirs, files in os.walk(rootdir):
     for filename in tqdm(files):
         if not filename.endswith('.replay'):
@@ -39,14 +39,28 @@ for root, dirs, files in os.walk(rootdir):
 
         player_team = {}
         best_score = 0
+        know_score = True
+        know_team = True
         for i in dict_game['players']:
             # indentifies MVP
-            if i['score'] > best_score:
-                best_score = i['score']
-            if i['isOrange']:
-                player_team.update({i['name']: tuple([i['score'], 'orange'])})
-            else:
-                player_team.update({i['name']: tuple([i['score'], 'blue'])})
+            try:
+                if i['score'] > best_score:
+                    best_score = i['score']
+            except KeyError:
+                know_score = False
+                print("NO SCORE")
+                break
+            try:
+                if i['isOrange']:
+                    player_team.update({i['name']: tuple([i['score'], 'orange'])})
+                else:
+                    player_team.update({i['name']: tuple([i['score'], 'blue'])})
+            except KeyError:
+                know_team = False
+                print("NO TEAM")
+                break
+        if not know_team or not know_score:
+            continue
 
         # identifying best player(s)
         ordered_playas = []

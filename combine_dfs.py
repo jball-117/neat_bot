@@ -24,11 +24,11 @@ def fix_ot_secs(df):
 ## combining replays ##
 #rootdir = '/home/zach/Files/Nas/Replays'
 if GRANULARITY == 1:
-    rootdir = '/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_8x_10y_7z/'
+    rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_8x_10y_7z/'
 elif GRANULARITY == .5:
-    rootdir = '/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_16x_20y_14z/'
+    rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_16x_20y_14z/'
 elif GRANULARITY == 0:
-    rootdir = '/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs/'
+    rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs/'
 
 for root, dirs, files in os.walk(rootdir):
     all_dfs = pd.read_csv(rootdir+"/"+files[0], low_memory=False)

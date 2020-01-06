@@ -58,7 +58,7 @@ def z_segment(z):
 
 ## segmenting df ##
 print("NORMALIZING...")
-rootdir = '/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs'
+rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs'
 for root, dirs, files in os.walk(rootdir):
     for filename in tqdm(files):
         if not filename.endswith('.csv'):
@@ -66,9 +66,9 @@ for root, dirs, files in os.walk(rootdir):
             continue
         
         if GRANULARITY == 1:
-            csv_name = "/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_8x_10y_7z/"
+            csv_name = "/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_8x_10y_7z/"
         elif GRANULARITY == .5:
-            csv_name = "/home/zach/Files/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_16x_20y_14z/"
+            csv_name = "/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_16x_20y_14z/"
         else:
             print("BAD GRANULARITY")
             exit()
