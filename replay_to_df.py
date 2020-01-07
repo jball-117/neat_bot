@@ -30,6 +30,7 @@ for root, dirs, files in os.walk(rootdir):
             analysis_manager = carball.analyze_replay_file(os.path.abspath(os.path.join(root, filename)))
         except Exception as e:
             print("ERROR WITH REPLAY ANALYSIS\n", e)
+            os.remove(os.path.abspath(os.path.join(root, filename)))
             continue
         proto_game = analysis_manager.get_protobuf_data()
         df = analysis_manager.get_data_frame()
@@ -153,6 +154,11 @@ for root, dirs, files in os.walk(rootdir):
         # need to do this if someone leaves game
         # THIS IS STILL BROKEN. THIS ONLY CHECKS ONE ROW FOR ALL NAN
         # MAKE SURE EVERYTHING ELSE FOR THAT PLAYER AFTER THAT ROW IS NAN
+        if not all(k in single_level_df.columns for k in ['0_pos_x', '0_pos_y', '0_pos_z', '1_pos_x', '1_pos_y', '1_pos_z',
+            '2_pos_x', '2_pos_y', '2_pos_z', '3_pos_x', '3_pos_y', '3_pos_z', '4_pos_x', '4_pos_y', '4_pos_z',
+            '5_pos_x', '5_pos_y', '5_pos_z']):
+            print("not all players accounted for")
+            continue
         single_level_df.reset_index(drop=True, inplace=True)
         if DELETE_WHEN_LEFT:
             print("CHECKING IF PLAYERS LEFT...")
@@ -298,6 +304,7 @@ for root, dirs, files in os.walk(rootdir):
                         rem_rows.add(i)
 
         single_level_df.drop(rem_rows, errors='ignore', inplace=True)
-        print("WRITING", csv_name)
-        single_level_df.to_csv(csv_name)
+        if not single_level_df.empty:
+            print("WRITING", csv_name)
+            single_level_df.to_csv(csv_name)
     break
