@@ -1,60 +1,88 @@
 import pandas as pd
-from keras.models import Model
+import numpy as np
+from keras.models import Model, Sequential
 from keras.wrappers.scikit_learn import KerasRegressor
 from sklearn.model_selection import GridSearchCV
 from keras.layers import *
+import joblib
 
-df = pd.read_csv('train_8x_10y_7z.csv')
+pd.set_option('mode.chained_assignment', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
+
+GRANULARITY = 0
+
+if GRANULARITY == 0:
+    df = pd.read_csv('exact_train.csv')
+if GRANULARITY == .5:
+    df = pd.read_csv('train_16x_20y_14z.csv')
+if GRANULARITY == 1:
+    df = pd.read_csv('train_8x_10y_7z.csv')
+
 df.drop(columns=['Unnamed: 0'], inplace=True)
+rem_cols = []
+for col in df.columns:
+    if 'steer' in col or 'handbrake' in col \
+    or 'active' in col or 'collect' in col \
+    or 'ball_cam' in col or 'throttle' in col:
+        rem_cols.append(col)
+df.drop(columns=rem_cols, inplace=True)
+df.dropna(inplace=True)
+df.reset_index(drop=True, inplace=True)
+
+# MOVE MY POSITION TO FRONT OF DATAFRAME
+cols = list(df.columns.values)
+cols.pop(cols.index('0_pos_x'))
+cols.pop(cols.index('0_pos_y'))
+cols.pop(cols.index('0_pos_z'))
+df = df[['0_pos_x', '0_pos_y', '0_pos_z']+cols]
 
 # NORMALIZING MAKING RANGE -1 TO 1 FOR ALL COLS
 for col in df.columns:
     df[col] = (df[col] - df[col].mean()) / df[col].std()
 
-x_train = df.values[:, 3:]
-#x_train = x_train[:, 3:]
-y_train = [df['0_pos_x'].values, df['0_pos_y'].values, df['0_pos_z'].values]
+#x_train = df.values[:, 3:]
+input_cols = [x for x in df.columns if x != '0_pos_x' \
+              and x != '0_pos_y' and x != '0_pos_z']
+x_train = df.filter(items=input_cols)
+y_train = df.filter(items=['0_pos_x', '0_pos_y', '0_pos_z'])
+x_train = np.asarray(x_train)
+y_train = np.asarray(y_train)
 
-def create_model(layers_nodes, activation):
-    model = Model(inputs=Input((x_train.shape[1],)))
-    for i, nodes in enumerate(layers_nodes):
-        last_layer = Dense(nodes)
-        model.add(last_layer)
+def create_model(layers=[45], activation='sigmoid', optimizer='rmsprop'):
+    model = Sequential()
+    for i, nodes in enumerate(layers):
+        if i == 0:
+            model.add(Dense(nodes, input_dim=x_train.shape[1]))
+        else:
+            model.add(Dense(nodes))
         model.add(Activation(activation))
-    model.outputs = [Dense(1, name='output_x')(last_layer),
-                     Dense(1, name='output_y')(last_layer),
-                     Dense(1, name='output_z')(last_layer)]
-
-    model.compile(loss='mean_squared_error', optimizer='rmsprop')
+    model.add(Dense(3))
+    model.compile(loss='mean_squared_error', optimizer=optimizer)
     return model
 
-model = KerasRegressor(build_fn=create_model, verbose=0)
+print("CONSTRUCTING...")
+model = KerasRegressor(build_fn=create_model, verbose=2)
 
-layers_nodes = [[45], [55, 35], [60, 35, 20], [65, 50, 33, 15], [67, 52, 35, 21, 12],
-                [70, 55, 34, 22, 13, 6]]
+layers = [[65, 50, 33, 15], [67, 52, 35, 21, 12],
+          [70, 55, 34, 22, 13, 6]]
 activations = ['sigmoid', 'relu']
-param_grid = dict(layers=layers_nodes, activation=activations, batch_size=[128,256],
-                  epochs=[30, 45, 60, 75, 90, 105])
-grid = GridSearchCV(estimator=model, param_grid=param_grid, scoring='neg_mean_squared_error')
+batch_size = [128, 256]
+epochs = [135]
+optimizers = ['rmsprop', 'adam']
 
-print(len(x_train))
-print(len(y_train))
-exit()
+param_grid = dict(layers=layers, activation=activations, batch_size=batch_size,
+                  epochs=epochs, optimizer=optimizers)
+
+grid = GridSearchCV(estimator=model, param_grid=param_grid,
+                    scoring='neg_mean_squared_error',
+                    verbose=5, cv=5)
+
+print("FITTING...")
 grid_result = grid.fit(x_train, y_train)
+print("SAVING...")
+joblib.dump(grid_result, 'gd_obj_'+str(x_train.shape[0])+'_frames.pkl')
 
 print(grid_result.best_score_)
 print()
 print(grid_result.best_params_)
-
-
-# inp = Input((x_train.shape[1],))
-# h = Dense(100, activation='sigmoid', name='h')(inp)
-# h2 = Dense(100, activation='sigmoid', name='h2')(h)
-# out1 = Dense(1, name='output_x')(h2)
-# out2 = Dense(1, name='output_y')(h2)
-# out3 = Dense(1, name='output_z')(h2)
-# model = Model(inp, [out1, out2, out3])
-# model.summary()
-#
-# model.compile(loss='mean_squared_error', optimizer='rmsprop', metrics=[metrics.cosine_similarity])
-# model.fit(x_train, y_train, epochs=60, batch_size=128)

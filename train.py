@@ -1,8 +1,10 @@
 import pandas as pd
-from keras.models import Model, Sequential
-from keras.wrappers.scikit_learn import KerasRegressor
-from sklearn.model_selection import GridSearchCV
+from keras.models import Model
 from keras.layers import *
+
+pd.set_option('mode.chained_assignment', None)
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
 GRANULARITY = 0
 
@@ -14,6 +16,22 @@ if GRANULARITY == 1:
     df = pd.read_csv('train_8x_10y_7z.csv')
 
 df.drop(columns=['Unnamed: 0'], inplace=True)
+rem_cols = []
+for col in df.columns:
+    if 'steer' in col or 'handbrake' in col \
+    or 'active' in col or 'collect' in col \
+    or 'ball_cam' in col or 'throttle' in col:
+        rem_cols.append(col)
+df.drop(columns=rem_cols, inplace=True)
+df.dropna(inplace=True)
+df.reset_index(drop=True, inplace=True)
+
+# MOVE MY POSITION TO FRONT OF DATAFRAME
+cols = list(df.columns.values)
+cols.pop(cols.index('0_pos_x'))
+cols.pop(cols.index('0_pos_y'))
+cols.pop(cols.index('0_pos_z'))
+df = df[['0_pos_x', '0_pos_y', '0_pos_z']+cols]
 
 # NORMALIZING MAKING RANGE -1 TO 1 FOR ALL COLS
 for col in df.columns:
@@ -22,9 +40,6 @@ for col in df.columns:
 x_train = df.values
 x_train = x_train[:, 3:]
 y_train = [df['0_pos_x'].values, df['0_pos_y'].values, df['0_pos_z'].values]
-print(len(x_train))
-print(len(y_train))
-exit()
 
 inp = Input((x_train.shape[1],))
 h = Dense(100, activation='sigmoid', name='h')(inp)
