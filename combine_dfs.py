@@ -4,6 +4,7 @@ from tqdm import tqdm
 import os
 
 GRANULARITY = 0 # edit this. 1 -> 8x_10y_7z, .5 -> 16x_20y_14z, 0 -> exact
+FRAMES_AHEAD = 15
 
 ## NN shouldn't care about game time in OT
 def fix_ot_secs(df):
@@ -22,7 +23,6 @@ def fix_ot_secs(df):
         return df
 
 ## combining replays ##
-#rootdir = '/home/zach/Files/Nas/Replays'
 if GRANULARITY == 1:
     rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_8x_10y_7z/'
 elif GRANULARITY == .5:
@@ -34,10 +34,10 @@ for root, dirs, files in os.walk(rootdir):
     all_dfs = pd.read_csv(rootdir+"/"+files[0], low_memory=False)
     all_dfs.drop(columns=['Unnamed: 0'], inplace=True)
     all_dfs = fix_ot_secs(all_dfs)
-    all_dfs['0_pos_x_nf'] = all_dfs['0_pos_x'].shift(-1)
-    all_dfs['0_pos_y_nf'] = all_dfs['0_pos_y'].shift(-1)
-    all_dfs['0_pos_z_nf'] = all_dfs['0_pos_z'].shift(-1)
-    all_dfs = all_dfs[:-1]
+    all_dfs['0_pos_x_nf'] = all_dfs['0_pos_x'].shift(-1*FRAMES_AHEAD)
+    all_dfs['0_pos_y_nf'] = all_dfs['0_pos_y'].shift(-1*FRAMES_AHEAD)
+    all_dfs['0_pos_z_nf'] = all_dfs['0_pos_z'].shift(-1*FRAMES_AHEAD)
+    all_dfs = all_dfs[:-1*FRAMES_AHEAD]
     for filename in tqdm(files[1:]):
         if not filename.endswith('.csv'):
             print("\n", filename, "not a csv\n")
@@ -45,12 +45,17 @@ for root, dirs, files in os.walk(rootdir):
         piece = pd.read_csv(rootdir+"/"+filename, low_memory=False)
         piece.drop(columns=['Unnamed: 0'], inplace=True)
         piece = fix_ot_secs(piece)
-        piece['0_pos_x_nf'] = piece['0_pos_x'].shift(-1)
-        piece['0_pos_y_nf'] = piece['0_pos_y'].shift(-1)
-        piece['0_pos_z_nf'] = piece['0_pos_z'].shift(-1)
-        piece = piece[:-1]
+        piece['0_pos_x_nf'] = piece['0_pos_x'].shift(-1*FRAMES_AHEAD)
+        piece['0_pos_y_nf'] = piece['0_pos_y'].shift(-1*FRAMES_AHEAD)
+        piece['0_pos_z_nf'] = piece['0_pos_z'].shift(-1*FRAMES_AHEAD)
+        piece = piece[:-1*FRAMES_AHEAD]
         all_dfs = all_dfs.append(piece, ignore_index=True)
 
     print(len(all_dfs))
     print("WRITING...")
-    all_dfs.to_csv("exact_train.csv")
+    if GRANULARITY == 0:
+        all_dfs.to_csv("exact_train.csv")
+    if GRANULARITY == .5:
+        all_dfs.to_csv("train_16x_20y_14z.csv")
+    if GRANULARITY == 1:
+        all_dfs.to_csv("train_8x_10y_7z.csv")

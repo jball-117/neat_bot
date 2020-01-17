@@ -23,7 +23,6 @@ for root, dirs, files in os.walk(rootdir):
         csv_name = rootdir+"/CSVs/"+filename
         csv_name = csv_name.replace('.replay', '.csv')
         if os.path.exists(csv_name):
-            print("\n", csv_name, "exists\n")
             continue
         print("ANALYZING...")
         try:
@@ -32,6 +31,7 @@ for root, dirs, files in os.walk(rootdir):
             print("ERROR WITH REPLAY ANALYSIS\n", e)
             os.remove(os.path.abspath(os.path.join(root, filename)))
             continue
+        
         proto_game = analysis_manager.get_protobuf_data()
         df = analysis_manager.get_data_frame()
         df = df.astype('float64')
@@ -42,6 +42,12 @@ for root, dirs, files in os.walk(rootdir):
         best_score = 0
         know_score = True
         know_team = True
+        
+        if len(dict_game['players']) != 6:
+            print("6 players not found")
+            os.remove(os.path.abspath(os.path.join(root, filename)))
+            continue
+        
         for i in dict_game['players']:
             # indentifies MVP
             try:
@@ -60,7 +66,9 @@ for root, dirs, files in os.walk(rootdir):
                 know_team = False
                 print("NO TEAM")
                 break
+        
         if not know_team or not know_score:
+            os.remove(os.path.abspath(os.path.join(root, filename)))
             continue
 
         # identifying best player(s)
@@ -86,9 +94,11 @@ for root, dirs, files in os.walk(rootdir):
         length = len(df['ball'])
         if length != len(df['game']):
             print("BAD")
+            exit()
         for playa in ordered_playas:
             if len(df[playa]) != length:
                 print("BAD")
+                exit()
         ###########################
 
         ## MAKING NEW SINGLE LEVEL DF FOR TRAINING ##
@@ -105,7 +115,7 @@ for root, dirs, files in os.walk(rootdir):
                 single_level_df.drop(columns=[col], inplace=True)
         single_level_df.rename(columns={'pos_x': str(player_desired)+'_pos_x', 'pos_y': str(player_desired)+'_pos_y', 'pos_z': str(player_desired)+'_pos_z'}, inplace=True)
         '''
-        single_level_df.drop(columns=['ping'], inplace=True)
+        single_level_df.drop(columns=['ping'], inplace=True, errors='ignore')
         single_level_df.rename(columns={'pos_x': str(player_desired)+'_pos_x', 'pos_y': str(player_desired)+'_pos_y', 'pos_z': str(player_desired)+'_pos_z', 
                 'rot_x': str(player_desired)+'_rot_x', 'rot_y': str(player_desired)+'_rot_y', 'rot_z': str(player_desired)+'_rot_z', 
                 'vel_x': str(player_desired)+'_vel_x', 'vel_y': str(player_desired)+'_vel_y', 'vel_z': str(player_desired)+'_vel_z', 
@@ -131,7 +141,7 @@ for root, dirs, files in os.walk(rootdir):
                     'vel_y': str(i)+'_vel_y', 'vel_z': str(i)+'_vel_z', 'ang_vel_x': str(i)+'_ang_vel_x', 'ang_vel_y': str(i)+'_ang_vel_y', \
                     'ang_vel_z': str(i)+'_ang_vel_z'}, inplace=True)
             '''
-            piece.drop(columns=['ping'], inplace=True)
+            piece.drop(columns=['ping'], inplace=True, errors='ignore')
             piece.rename(columns={'pos_x': str(i)+'_pos_x', 'pos_y': str(i)+'_pos_y', 'pos_z': str(i)+'_pos_z', 
                     'rot_x': str(i)+'_rot_x', 'rot_y': str(i)+'_rot_y', 'rot_z': str(i)+'_rot_z', 
                     'vel_x': str(i)+'_vel_x', 'vel_y': str(i)+'_vel_y', 'vel_z': str(i)+'_vel_z', 
@@ -144,7 +154,7 @@ for root, dirs, files in os.walk(rootdir):
             single_level_df = single_level_df.join(piece)
             
         ball_data = df['ball']
-        ball_data.drop(columns=['hit_team_no'], inplace=True)
+        ball_data.drop(columns=['hit_team_no'], inplace=True, errors='ignore')
         ball_data.rename(columns={'pos_x': 'ball_pos_x', 'pos_y': 'ball_pos_y', 'pos_z': 'ball_pos_z', 'rot_x': 'ball_rot_x', \
                 'rot_y': 'ball_rot_y', 'rot_z': 'ball_rot_z', 'vel_x': 'ball_vel_x', 'vel_y': 'ball_vel_y', 'vel_z': 'ball_vel_z', \
                 'ang_vel_x': 'ball_ang_vel_x', 'ang_vel_y': 'ball_ang_vel_y', 'ang_vel_z': 'ball_ang_vel_z'}, inplace=True)
@@ -158,7 +168,9 @@ for root, dirs, files in os.walk(rootdir):
             '2_pos_x', '2_pos_y', '2_pos_z', '3_pos_x', '3_pos_y', '3_pos_z', '4_pos_x', '4_pos_y', '4_pos_z',
             '5_pos_x', '5_pos_y', '5_pos_z']):
             print("not all players accounted for")
+            os.remove(os.path.abspath(os.path.join(root, filename)))
             continue
+        
         single_level_df.reset_index(drop=True, inplace=True)
         if DELETE_WHEN_LEFT:
             print("CHECKING IF PLAYERS LEFT...")
@@ -303,7 +315,9 @@ for root, dirs, files in os.walk(rootdir):
                     else:
                         rem_rows.add(i)
 
-        single_level_df.drop(rem_rows, errors='ignore', inplace=True)
+            single_level_df.drop(rem_rows, errors='ignore', inplace=True)
+            single_level_df.reset_index(drop=True, inplace=True)
+        
         if not single_level_df.empty:
             print("WRITING", csv_name)
             single_level_df.to_csv(csv_name)
