@@ -41,7 +41,6 @@ df = df[['0_pos_x', '0_pos_y', '0_pos_z']+cols]
 for col in df.columns:
     df[col] = (df[col] - df[col].mean()) / df[col].std()
 
-#x_train = df.values[:, 3:]
 input_cols = [x for x in df.columns if x != '0_pos_x' \
               and x != '0_pos_y' and x != '0_pos_z']
 x_train = df.filter(items=input_cols)
@@ -64,12 +63,11 @@ def create_model(layers=[45], activation='sigmoid', optimizer='rmsprop'):
 print("CONSTRUCTING...")
 model = KerasRegressor(build_fn=create_model, verbose=2)
 
-layers = [[65, 50, 33, 15], [67, 52, 35, 21, 12],
-          [70, 55, 34, 22, 13, 6]]
-activations = ['sigmoid', 'relu']
-batch_size = [128, 256]
-epochs = [135]
-optimizers = ['rmsprop', 'adam']
+layers = [[46], [68, 23]]
+activations = ['relu']
+batch_size = [128]
+epochs = [90]
+optimizers = ['rmsprop']
 
 param_grid = dict(layers=layers, activation=activations, batch_size=batch_size,
                   epochs=epochs, optimizer=optimizers)
