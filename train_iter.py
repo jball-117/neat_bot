@@ -1,4 +1,5 @@
-import dask.dataframe as dd
+#import dask.dataframe as dd
+import pandas as pd
 import numpy as np
 from keras.models import Model, Sequential
 from keras.wrappers.scikit_learn import KerasRegressor
@@ -16,11 +17,14 @@ GRANULARITY = 0
 FRAMES_AHEAD = 15
 
 if GRANULARITY == 0:
-    df = dd.read_csv("exact_train_"+str(FRAMES_AHEAD)+"_frames"+".csv")
+    #df = dd.read_csv("exact_train_"+str(FRAMES_AHEAD)+"_frames"+".csv")
+    df = pd.read_csv("exact_train_"+str(FRAMES_AHEAD)+"_frames"+".csv")
 if GRANULARITY == .5:
-    df = dd.read_csv("train_16x_20y_14z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
+    #df = dd.read_csv("train_16x_20y_14z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
+    df = pd.read_csv("train_16x_20y_14z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
 if GRANULARITY == 1:
-    df = dd.read_csv("train_8x_10y_7z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
+    #df = dd.read_csv("train_8x_10y_7z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
+    df = pd.read_csv("train_8x_10y_7z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
 
 df.drop(columns=['Unnamed: 0'], inplace=True)
 rem_cols = []
