@@ -34,21 +34,20 @@ def manip(df):
 
 ## combining replays ##
 if GRANULARITY == 1:
-    rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_8x_10y_7z/'
+    rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_8x_10y_7z/dask_CSVs'
 elif GRANULARITY == .5:
-    rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_16x_20y_14z/'
+    rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs_16x_20y_14z/dask_CSVs'
 elif GRANULARITY == 0:
-    rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs/'
+    rootdir = '/home/zach/Files/Nas/ReplayModels/ReplayDataProcessing/RANKED_STANDARD/Replays/1400-1600/CSVs/dask_CSVs'
 
 all_dfs = dd.read_csv(rootdir+"/*.csv")
-print(all_dfs.columns)
 all_dfs = all_dfs.map_partitions(manip)
 
 print(all_dfs.shape[0].compute())
 print("WRITING...")
 if GRANULARITY == 0:
-    all_dfs.to_csv("exact_train_"+str(FRAMES_AHEAD)+"_frames"+".csv")
+    all_dfs.to_csv("/home/zach/Files/Nas/exact_train_"+str(FRAMES_AHEAD)+"_frames"+".csv")
 if GRANULARITY == .5:
-    all_dfs.to_csv("train_16x_20y_14z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
+    all_dfs.to_csv("/home/zach/Files/Nas/train_16x_20y_14z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
 if GRANULARITY == 1:
-    all_dfs.to_csv("train_8x_10y_7z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
+    all_dfs.to_csv("/home/zach/Files/Nas/train_8x_10y_7z_"+str(FRAMES_AHEAD)+"_frames"+".csv")
